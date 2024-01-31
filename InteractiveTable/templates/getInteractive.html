@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Grid</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin: 20px;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        th:hover, td:hover {
+            background-color: #e0e0e0;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h2>Interactive Grid</h2>
+    <!-- Displays Table -->
+    {{ html_table | safe }}
+
+    <form id="buildForm" method="post" action="/InteractiveTable/update/">
+        {% csrf_token %}
+        <!-- Hidden input to store JSON data -->
+        <input type="hidden" name="updated_data" id="gridDataInput" value="">
+        <button type="button" id="buildButton">Build</button>
+    </form>
+
+    <script>
+        // EventListener is added for "Build" button and changing cells
+        // 'DOMContentLoaded' event indicates that other functions occur first then the EventListener is fired
+        document.addEventListener('DOMContentLoaded', function () {
+            var cells = document.querySelectorAll('td'); // This should select every row
+            var gridDataInput = document.getElementById('gridDataInput'); // This will store the data when "Build" button is clicked
+
+            cells.forEach(function (cell) {
+                cell.addEventListener('click', function () {
+                    // Toggle the cell content between "Green" and "Blue"
+                    if (cell.textContent.trim() === 'Green') {
+                        cell.textContent = 'Blue';
+                        cell.style.backgroundColor = 'lightblue';
+                    } else {
+                        cell.textContent = 'Green';
+                        cell.style.backgroundColor = 'lightgreen';
+                    }
+                });
+            });
+
+            document.getElementById('buildButton').addEventListener('click', function () {
+                // Extract the current grid data
+                var gridData = [];
+                cells.forEach(function (cell) {
+                    gridData.push(cell.textContent.trim());
+                });
+
+                // Set the value of the hidden input to the JSON representation of the grid data
+                gridDataInput.value = JSON.stringify(gridData);
+
+                // Submit the form
+                document.getElementById('buildForm').submit();
+            });
+        });
+    </script>
+</body>
+</html>
