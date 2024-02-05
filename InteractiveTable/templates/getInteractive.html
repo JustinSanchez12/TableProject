@@ -1,22 +1,28 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Interactive Grid</title>
+    <title>Wafer Map</title>
     <style>
         table {
             border-collapse: collapse;
             width: 50%;
             margin: 20px;
         }
-        th, td {
+
+        th,
+        td {
             border: 1px solid black;
             padding: 10px;
             text-align: center;
             cursor: pointer;
         }
-        th:hover, td:hover {
+
+        th:hover,
+        td:hover {
             background-color: #e0e0e0;
         }
+
         button {
             margin-top: 10px;
             padding: 10px;
@@ -24,8 +30,9 @@
         }
     </style>
 </head>
+
 <body>
-    <h2>Interactive Grid</h2>
+    <h2>Wafer Map</h2>
     <!-- Displays Table -->
     {{ html_table | safe }}
 
@@ -37,39 +44,46 @@
     </form>
 
     <script>
-        // EventListener is added for "Build" button and changing cells
-        // 'DOMContentLoaded' event indicates that other functions occur first then the EventListener is fired
         document.addEventListener('DOMContentLoaded', function () {
-            var cells = document.querySelectorAll('td'); // This should select every row
-            var gridDataInput = document.getElementById('gridDataInput'); // This will store the data when "Build" button is clicked
+            var cells = document.querySelectorAll('td');
+            var gridDataInput = document.getElementById('gridDataInput');
 
             cells.forEach(function (cell) {
                 cell.addEventListener('click', function () {
-                    // Toggle the cell content between "Green" and "Blue"
-                    if (cell.textContent.trim() === 'Green') {
-                        cell.textContent = 'Blue';
+                    var row = cell.parentNode.rowIndex - 1;
+                    var col = cell.cellIndex - 1;
+                    var verdict = cell.textContent.trim();
+                    var availability = '';
+
+                    if (verdict === 'Pass - 1') {
+                        cell.textContent = 'Select';
                         cell.style.backgroundColor = 'lightblue';
-                    } else {
-                        cell.textContent = 'Green';
-                        cell.style.backgroundColor = 'lightgreen';
                     }
+                    gridData.push({'row': row, 'col': col + 1, 'verdict': verdict , 'availability': availability})
                 });
             });
-
+            var gridData = [];
             document.getElementById('buildButton').addEventListener('click', function () {
-                // Extract the current grid data
-                var gridData = [];
-                cells.forEach(function (cell) {
-                    gridData.push(cell.textContent.trim());
-                });
+                // Extract the current grid data with "Row" and "Col" information
+               
+                /*cells.forEach(function (cell) {
+                    var row = cell.parentNode.rowIndex;
+                    var col = cell.cellIndex;
+                    var verdict = cell.textContent.trim();
+                    var availability = cell.textContent.trim();
+                    gridData.push({ 'row': row, 'col': col, 'verdict': verdict , 'availability': availability});
+                }); */
 
                 // Set the value of the hidden input to the JSON representation of the grid data
                 gridDataInput.value = JSON.stringify(gridData);
 
                 // Submit the form
                 document.getElementById('buildForm').submit();
+                gridData = [];
             });
         });
+
     </script>
 </body>
+
 </html>
