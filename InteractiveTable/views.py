@@ -3,42 +3,88 @@ from django.http import JsonResponse
 import pandas as pd 
 import json
 
-def interactive_grid(request):
-    # Creates DataFrame of a 3x3 Table
-    data = {'Column 1': ['Green', 'Green', 'Green'],
-            'Column 2': ['Green', 'Green', 'Green'],
-            'Column 3': ['Green', 'Green', 'Green']}
-    
-    # Reads the DataFrame
-    df = pd.DataFrame(data)
-    # Displays it to HTML
-    html_table = df.to_html(classes='table table-bordered', index=False)
+def background_colors(value):
+    if value == 'Pass - 1':
+        return 'background-color: green; color: rgba(0, 128, 0, 0); user-select: none'
+    elif value == 'Fail - 1':
+        return 'background-color: red; color: rgba(255, 0, 0, 0); user-select: none'
+    elif value == 'Pass - 0':
+        return 'background-color: grey; color: rgba(0, 0, 0, 0); user-select: none'
+    else:
+        return 'background-color: white; color: rgba(255, 255, 255, 0); user-select: none'
 
-    # Renders the page on templates folder
+def interactive_grid(request):
+    #Read in CSV
+    df = pd.read_csv('wafer-tables.csv')
+    print(df)
+    
+    # Turn CSV into pivot table
+    df['Combined'] = df['Verdict'] + ' - ' + df['Availability'].astype(str)
+    df_pivot = pd.pivot_table(df, values='Combined', index='Row', columns='Col', aggfunc='sum')
+
+    df_pivot.columns = df_pivot.columns.get_level_values(0)
+
+    # Apply background_colors
+    styled_df = df_pivot.style.applymap(background_colors)
+
+    print(df_pivot)
+    
+    #Display the DataFrame to HTML
+    #Style the table where it removes the column headers
+    html_table = styled_df.to_html(classes='table table-bordered', header=False, index=False, table_styles=[
+        dict(selector='thead', props=[('display', 'none')]),
+        dict(selector='tbody tr th', props=[('display', 'none')]),
+    ])
     return render(request, 'getInteractive.html', {'html_table': html_table})
+ 
 
 def update_grid(request):
-    #Checks if user sent a POST Request
+    # Checks if the user sent a POST Request
     if request.method == 'POST':
         updated_data = request.POST.get('updated_data', '')
+        grid_data = json.loads(updated_data)
+        #print(grid_data)
+        # Reads again from CSV
+        df = pd.read_csv('wafer-tables.csv')
+        df_dict = df.to_dict(orient='split')
+        df_json = json.dumps(df_dict)
+        print(df_dict)
         
-        try:
-            # Converts JSON data into a python object
-            grid_data = json.loads(updated_data)
-            # Recreates original table
-            df = pd.DataFrame({
-                'Column 1': [grid_data[i] for i in [0, 3, 6]],
-                'Column 2': [grid_data[i] for i in [1, 4, 7]],
-                'Column 3': [grid_data[i] for i in [2, 5, 8]]
-            })
+        for cell in grid_data:
+            cell_index = next((index for index, row in enumerate(df_dict['data']) if row[0] == cell["row"] and row[1] == cell["col"]), None)
+            if cell_index is not None:
+                df_dict['data'][cell_index][3] = 0
+                df.loc[cell_index,"Availability"] = 0
+            else:
+                print(cell["row"])
+                print(cell["col"])
+        
+        #print(df_dict)
+        print(df)
+        
+        #Saves to CSV
+        df.to_csv('wafer-tables-1.csv', index=False)
+        #Reads into csv agin
+        df = pd.read_csv('wafer-tables-1.csv')
+        
+        # Turn CSV into pivot table
+        df['Combined'] = df['Verdict'] + ' - ' + df['Availability'].astype(str)
+        df_pivot = pd.pivot_table(df, values='Combined', index='Row', columns='Col', aggfunc='sum')
 
-            # Updates table to HTML - This should act as updated table with changes
-            html_table = df.to_html(classes='table table-bordered', index=False)
-            # Renders to the templates
-            return render(request, 'getInteractive.html', {'html_table': html_table})
-        except json.JSONDecodeError:
-            # If JSON can't convert to python object
-            return JsonResponse({'error': 'Invalid JSON Data'})
+        df_pivot.columns = df_pivot.columns.get_level_values(0)
+
+        # Apply background_colors
+        styled_df = df_pivot.style.applymap(background_colors)
+
+        print(df_pivot)
+        
+        #Display the DataFrame to HTML
+        #Style the table where it removes the column headers
+        html_table = styled_df.to_html(classes='table table-bordered', header=False, index=False, table_styles=[
+            dict(selector='thead', props=[('display', 'none')]),
+            dict(selector='tbody tr th', props=[('display', 'none')]),
+        ])
+        return render(request, 'getInteractive.html', {'html_table': html_table})
     else:
-        # If empty displays error message
+        # If empty, display an error message
         return JsonResponse({'error': 'Invalid request method'})
