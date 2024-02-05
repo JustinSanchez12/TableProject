@@ -50,6 +50,8 @@ def update_grid(request):
         df_json = json.dumps(df_dict)
         print(df_dict)
         
+        # Finds the cell that has been selected and it will update the Availability of the selected cell from 1 to 0.
+        # If not then it will print on which cell got selected
         for cell in grid_data:
             cell_index = next((index for index, row in enumerate(df_dict['data']) if row[0] == cell["row"] and row[1] == cell["col"]), None)
             if cell_index is not None:
