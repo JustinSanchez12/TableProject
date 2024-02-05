@@ -65,9 +65,9 @@ def update_grid(request):
         print(df)
         
         #Saves to CSV
-        df.to_csv('wafer-tables-1.csv', index=False)
+        df.to_csv('wafer-tables.csv', index=False)
         #Reads into csv agin
-        df = pd.read_csv('wafer-tables-1.csv')
+        df = pd.read_csv('wafer-tables.csv')
         
         # Turn CSV into pivot table
         df['Combined'] = df['Verdict'] + ' - ' + df['Availability'].astype(str)
