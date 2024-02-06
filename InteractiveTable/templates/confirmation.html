@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation</title>
+</head>
+
+<body>
+    <h2>Confirm Wafer Map</h2>
+    <p>You have selected the following cells:</p>
+
+    <p>Selected Cell Data:</p>
+    <pre>{{ updated_data }}</pre>
+    <label for="confirmation_response">Do you want to confirm the changes?</label>
+
+    <form method="post" action="/InteractiveTable/update/">
+        {% csrf_token %}
+        <!-- Display the selected data for confirmation -->
+        <input type="hidden" name="updated_data" value="{{ updated_data }}">
+        <button type="submit" name="confirmation_response" value="yes">Yes</button>
+    </form>
+    
+    <form method="post" action="{% url 'interactive_grid' %}">
+        {% csrf_token %}
+        <button type="submit" name="confirmation_response" value="no">No</button>
+    </form>
+
+    
+</body>
+
+</html>
