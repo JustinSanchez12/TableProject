@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Wafer Map</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 50%;
+            margin: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        th:hover,
+        td:hover {
+            background-color: #e0e0e0;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Wafer Map</h2>
+    <!-- Displays Table -->
+    {{ html_table | safe }}
+
+    <form id="buildForm" method="post" action="/InteractiveTable/update/">
+        {% csrf_token %}
+        <!-- Hidden input to store JSON data -->
+        <input type="hidden" name="updated_data" id="gridDataInput" value="">
+        <button type="button" id="buildButton">Build</button>
+    </form>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var cells = document.querySelectorAll('td');
+            var gridDataInput = document.getElementById('gridDataInput');
+            
+
+            cells.forEach(function (cell) {
+                cell.addEventListener('click', function () {
+                    // Extract the current grid data with "Row" and "Col" information
+                    var row = cell.parentNode.rowIndex - 1;
+                    var col = cell.cellIndex - 1;
+                    var value = cell.textContent.trim();
+                    //var availability = cell.textContent.trim();
+
+                    if (value === 'Pass - 1') {
+                        cell.textContent = 'Select';
+                        cell.style.backgroundColor = 'lightblue';
+                    }
+                    gridData.push({'row': row, 'col': col + 1, 'value': value})
+                });
+            });
+            var gridData = [];
+            document.getElementById('buildButton').addEventListener('click', function () {
+                // Set the value of the hidden input to the JSON representation of the grid data
+                gridDataInput.value = JSON.stringify(gridData);
+
+                gridData = [];
+
+                // Submit the form
+                document.getElementById('buildForm').submit();
+                
+            });
+        });
+
+    </script>
+</body>
+
+</html>
