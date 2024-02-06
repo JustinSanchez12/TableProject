@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse, HttpResponseBadRequest
 import pandas as pd 
 import json
 
@@ -16,7 +16,7 @@ def background_colors(value):
 def interactive_grid(request):
     #Read in CSV
     df = pd.read_csv('wafer-tables.csv')
-    print(df)
+    #print(df)
     
     # Turn CSV into pivot table
     df['Combined'] = df['Verdict'] + ' - ' + df['Availability'].astype(str)
@@ -27,7 +27,7 @@ def interactive_grid(request):
     # Apply background_colors
     styled_df = df_pivot.style.applymap(background_colors)
 
-    print(df_pivot)
+    #print(df_pivot)
     
     #Display the DataFrame to HTML
     #Style the table where it removes the column headers
@@ -36,19 +36,20 @@ def interactive_grid(request):
         dict(selector='tbody tr th', props=[('display', 'none')]),
     ])
     return render(request, 'getInteractive.html', {'html_table': html_table})
+    #return redirect('confirmation')
  
 
 def update_grid(request):
     # Checks if the user sent a POST Request
     if request.method == 'POST':
-        updated_data = request.POST.get('updated_data', '')
+        updated_data = request.POST.get("updated_data", "")
         grid_data = json.loads(updated_data)
-        #print(grid_data)
+        print(grid_data)
         # Reads again from CSV
         df = pd.read_csv('wafer-tables.csv')
         df_dict = df.to_dict(orient='split')
         df_json = json.dumps(df_dict)
-        print(df_dict)
+        #print(df_dict)
         
         # Finds the cell that has been selected and it will update the Availability of the selected cell from 1 to 0.
         # If not then it will print on which cell got selected
@@ -62,7 +63,7 @@ def update_grid(request):
                 print(cell["col"])
         
         #print(df_dict)
-        print(df)
+        #print(df)
         
         #Saves to CSV
         df.to_csv('wafer-tables.csv', index=False)
@@ -78,7 +79,7 @@ def update_grid(request):
         # Apply background_colors
         styled_df = df_pivot.style.applymap(background_colors)
 
-        print(df_pivot)
+        #print(df_pivot)
         
         #Display the DataFrame to HTML
         #Style the table where it removes the column headers
@@ -90,3 +91,18 @@ def update_grid(request):
     else:
         # If empty, display an error message
         return JsonResponse({'error': 'Invalid request method'})
+    
+def confirmation(request):
+    if request.method == 'POST':
+        # Get selected cell data from user selection
+        updated_data = request.POST.get('updated_data', "")
+        print(updated_data)  # Print the received data for debugging
+        
+        #grid_data = json.loads(updated_data)
+        #print(grid_data)
+
+        #return render(request, 'confirmation.html', {'grid_data': grid_data})
+        return render(request, 'confirmation.html', {'updated_data': updated_data})
+    else:
+        # Render the initial confirmation page
+        return render(request, 'confirmation.html')
